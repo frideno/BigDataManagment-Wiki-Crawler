@@ -25,6 +25,7 @@ def crawl(url, xpaths):
     :return: list containing couples of [source url, crawled url]
     """
 
+    prefix_url = 'https://en.wikipedia.org'
     res = []
     # counter dictionary for appearnce:
     urls_counter = {url: 0}
@@ -35,14 +36,16 @@ def crawl(url, xpaths):
     heapq.heappush(priority_q, (0, url))
 
     # visited array to prevent loops
-    visited = []
-
+    visited = [' ']
+    
     # keep explore tennis players until there is 100 of them.
-    while len(urls_counter) < 1000:
+    current_url = ' '
+    for round in range(10):
         # gets most appeared url, and gets all tennis players related from it, by xpath.
-        current_url = heapq.heappop(priority_q)[1]
-        print("--- getting " + current_url + " ---------")
-        page = requests.get('https://en.wikipedia.org' +current_url)
+        while current_url in visited:
+            current_url = heapq.heappop(priority_q)[1]
+        print("--- getting " + prefix_url +  current_url + " ---------")
+        page = requests.get(prefix_url + current_url)
         doc = html.fromstring(page.content)
         # sleep(3)
         urls = []
@@ -60,11 +63,10 @@ def crawl(url, xpaths):
 
         # add to priority queue by count:
         for u, c in urls_counter.items():
-            if u not in visited:
-                heapq.heappush(priority_q, (-c, u))
+            heapq.heappush(priority_q, (-c, u))
         # add uniqly to result list.
         for u in set(urls):
-            res.append([current_url, u])
+            res.append([prefix_url + current_url, prefix_url + u])
 
 
     return res
