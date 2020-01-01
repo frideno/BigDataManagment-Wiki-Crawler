@@ -1,21 +1,8 @@
 import requests
 from lxml import html
 import heapq
+from time import sleep
 
-
-def getXPaths():
-
-    """
-    question 1. xpath queriesn.
-    this gives xpaths from file "xpathsQueries.txt"
-    """
-
-    xpaths = []
-    with open("xpathQueries.txt") as xpaths_file:
-        for line in xpaths_file:
-            xpaths.append(line[:-1])
-
-    return xpaths
 
 def crawl(url, xpaths):
     """
@@ -37,29 +24,31 @@ def crawl(url, xpaths):
 
     # visited array to prevent loops
     visited = [' ']
-    
+
     # keep explore tennis players until there is 100 of them.
     current_url = ' '
-    for round in range(10):
+    for round in range(100):
         # gets most appeared url, and gets all tennis players related from it, by xpath.
         while current_url in visited:
             current_url = heapq.heappop(priority_q)[1]
-        print("--- getting " + prefix_url +  current_url + " ---------")
+        # print("--- getting " + prefix_url + current_url + " ---------")
         page = requests.get(prefix_url + current_url)
         doc = html.fromstring(page.content)
-        # sleep(3)
+        sleep(3)
         urls = []
         for query in xpaths:
             urls += doc.xpath(query)
-        print(len(urls))
+        # print(len(urls))
 
         # add current to visited
         visited.append(current_url)
 
         # count resutls
         for u in urls:
-            if u in urls_counter: urls_counter[u] += 1
-            else: urls_counter[u] = 1
+            if u in urls_counter:
+                urls_counter[u] += 1
+            else:
+                urls_counter[u] = 1
 
         # add to priority queue by count:
         for u, c in urls_counter.items():
@@ -68,13 +57,4 @@ def crawl(url, xpaths):
         for u in set(urls):
             res.append([prefix_url + current_url, prefix_url + u])
 
-
     return res
-
-
-if __name__ == "__main__":
-    xpaths = getXPaths()
-    andyurl = "/wiki/Andy_Ram"
-    res = crawl(andyurl, xpaths)
-    print('\n'.join([':     '.join(x) for x in res]))
-    print(len(res))
